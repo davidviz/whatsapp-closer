@@ -10,6 +10,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Consulta vacía' });
   }
 
+  if (!process.env.CLAUDE_API_KEY) {
+    return res.status(500).json({
+      error: 'Falta la variable de entorno CLAUDE_API_KEY en el servidor',
+      success: false
+    });
+  }
+
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -19,7 +26,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 1000,
         messages: [
           {
@@ -77,9 +84,9 @@ SIN explicaciones, LISTAS PARA COPIAR/PEGAR.`
 
     if (!response.ok) {
       console.error('Claude API error:', data);
-      return res.status(500).json({ 
-        error: 'Error generando respuestas',
-        success: false 
+      return res.status(response.status).json({
+        error: data?.error?.message || 'Error generando respuestas',
+        success: false
       });
     }
 
